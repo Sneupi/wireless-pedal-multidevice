@@ -5,9 +5,9 @@
 // Define the device to be flashed
 //-----------------------------------------------------------------------------
 
-#define FLASH_PEDAL 
+// #define FLASH_PEDAL 
 // #define FLASH_CONTROLLER
-// #define FLASH_RECEIVER
+#define FLASH_RECEIVER
 
 //-----------------------------------------------------------------------------
 // (DO NOT EDIT THIS) Include the appropriate device

@@ -1,0 +1,12 @@
+// Config shared by each device
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#include <Arduino.h>
+
+const extern uint8_t PEDAL_MAC[]  = {0xD4, 0x8A, 0xFC, 0xC5, 0xFB, 0x84};
+const extern uint8_t RECEIVER_MAC[] = {0xD4, 0x8A, 0xFC, 0xC6, 0x7E, 0x70};
+const extern uint8_t CONTROLLER_MAC[] = {0xE4, 0x65, 0xB8, 0x27, 0x56, 0x28};
+
+#endif // CONFIG_H
