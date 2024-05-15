@@ -1,129 +1,221 @@
 #ifndef CONTROLLER_HPP
 #define CONTROLLER_HPP
+/**
+   The MIT License (MIT)
 
-//-----------------------------------------------------------------------------
-// INCLUDES
-//-----------------------------------------------------------------------------
+   Copyright (c) 2018 by ThingPulse, Daniel Eichhorn
+   Copyright (c) 2018 by Fabrice Weinberg
 
-#include <Arduino.h>
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
 
-//-----------------------------------------------------------------------------
-// DEFINES
-//-----------------------------------------------------------------------------
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
 
-#if CONFIG_FREERTOS_UNICORE
-#define ARDUINO_RUNNING_CORE 0
-#else
-#define ARDUINO_RUNNING_CORE 1
-#endif
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
 
-#define ANALOG_INPUT_PIN A0
+   ThingPulse invests considerable time and money to develop these open source libraries.
+   Please support us by buying our products (and not the clones) from
+   https://thingpulse.com
 
-#ifndef LED_BUILTIN
-  #define LED_BUILTIN 13 // Specify the on which is your LED
-#endif
+*/
 
-//-----------------------------------------------------------------------------
-// FUNCTION DECLARATIONS
-//-----------------------------------------------------------------------------
+// Include the correct display library
 
-// Turns on an LED on for one second, then off for one second, repeatedly.
-void TaskBlink( void *pvParameters );
+// For a connection via I2C using the Arduino Wire include:
+#include <Wire.h>               // Only needed for Arduino 1.6.5 and earlier
+#include "SSD1306Wire.h"        // legacy: #include "SSD1306.h"
+// OR #include "SH1106Wire.h"   // legacy: #include "SH1106.h"
 
-// Reads an analog value from a pin and prints it to the serial monitor
-void TaskAnalogRead( void *pvParameters );
+// For a connection via I2C using brzo_i2c (must be installed) include:
+// #include <brzo_i2c.h>        // Only needed for Arduino 1.6.5 and earlier
+// #include "SSD1306Brzo.h"
+// OR #include "SH1106Brzo.h"
 
-//-----------------------------------------------------------------------------
-// GLOBAL VARIABLES
-//-----------------------------------------------------------------------------
+// For a connection via SPI include:
+// #include <SPI.h>             // Only needed for Arduino 1.6.5 and earlier
+// #include "SSD1306Spi.h"
+// OR #include "SH1106SPi.h"
 
-TaskHandle_t analog_read_task_handle; // You can (don't have to) use this to be able to manipulate a task from somewhere else.
 
-//-----------------------------------------------------------------------------
-// SETUP
-//-----------------------------------------------------------------------------
 
-// The setup function runs once when you press reset or power on the board.
+// Initialize the OLED display using Arduino Wire:
+SSD1306Wire display(0x3c, SDA, SCL);   // ADDRESS, SDA, SCL  -  SDA and SCL usually populate automatically based on your board's pins_arduino.h e.g. https://github.com/esp8266/Arduino/blob/master/variants/nodemcu/pins_arduino.h
+// SSD1306Wire display(0x3c, D3, D5);  // ADDRESS, SDA, SCL  -  If not, they can be specified manually.
+// SSD1306Wire display(0x3c, SDA, SCL, GEOMETRY_128_32);  // ADDRESS, SDA, SCL, OLEDDISPLAY_GEOMETRY  -  Extra param required for 128x32 displays.
+// SH1106Wire display(0x3c, SDA, SCL);     // ADDRESS, SDA, SCL
+
+// Initialize the OLED display using brzo_i2c:
+// SSD1306Brzo display(0x3c, D3, D5);  // ADDRESS, SDA, SCL
+// or
+// SH1106Brzo display(0x3c, D3, D5);   // ADDRESS, SDA, SCL
+
+// Initialize the OLED display using SPI:
+// D5 -> CLK
+// D7 -> MOSI (DOUT)
+// D0 -> RES
+// D2 -> DC
+// D8 -> CS
+// SSD1306Spi display(D0, D2, D8);  // RES, DC, CS
+// or
+// SH1106Spi display(D0, D2);       // RES, DC
+
+
+#define DEMO_DURATION 3000
+typedef void (*Demo)(void);
+
+int demoMode = 0;
+int counter = 1;
+
 void setup() {
-  // Initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
-  // Set up two tasks to run independently.
-  uint32_t blink_delay = 1000; // Delay between changing state on LED pin
-  xTaskCreate(
-    TaskBlink
-    ,  "Task Blink"         // A name just for humans
-    ,  2048                 // The stack size can be checked by calling `uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);`
-    ,  (void*) &blink_delay // Task parameter which can modify the task behavior. This must be passed as pointer to void.
-    ,  2                    // Priority
-    ,  NULL                 // Task handle is not used here - simply pass NULL
-    );
+  Serial.println();
+  Serial.println();
 
-  // This variant of task creation can also specify on which core it will be run (only relevant for multi-core ESPs)
-  xTaskCreatePinnedToCore(
-    TaskAnalogRead
-    ,  "Analog Read"
-    ,  2048                     // Stack size
-    ,  NULL                     // When no parameter is used, simply pass NULL
-    ,  1                        // Priority
-    ,  &analog_read_task_handle // With task handle we will be able to manipulate with this task.
-    ,  ARDUINO_RUNNING_CORE     // Core on which the task will run
-    );
 
-  Serial.printf("Basic Multi Threading Arduino Example\n");
-  // Now the task scheduler, which takes over control of scheduling individual tasks, is automatically started.
-}
-//-----------------------------------------------------------------------------
-// LOOP
-//-----------------------------------------------------------------------------
+  // Initialising the UI will init the display too.
+  display.init();
 
-void loop(){
-  
-  // Make sure that the task actually exists
-  if(analog_read_task_handle != NULL){ 
+  display.flipScreenVertically();
+  display.setFont(ArialMT_Plain_10);
 
-    delay(10000);
-    vTaskDelete(analog_read_task_handle); // Delete task
-    analog_read_task_handle = NULL; // prevent calling vTaskDelete on non-existing task
-
-  }
-}
-//-----------------------------------------------------------------------------
-// FUNCTION DEFINITIONS
-//-----------------------------------------------------------------------------
-
-void TaskBlink(void *pvParameters){  // This is a task.
-  uint32_t blink_delay = *((uint32_t*)pvParameters);
-
-  // initialize digital LED_BUILTIN on pin 13 as an output.
-  pinMode(LED_BUILTIN, OUTPUT);
-
-  for (;;){ // A Task shall never return or exit.
-    digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-    // arduino-esp32 has FreeRTOS configured to have a tick-rate of 1000Hz and portTICK_PERIOD_MS
-    // refers to how many milliseconds the period between each ticks is, ie. 1ms.
-    delay(blink_delay);
-    digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
-    delay(blink_delay);
-  }
 }
 
-void TaskAnalogRead(void *pvParameters){  // This is a task.
-  (void) pvParameters;
-  // Check if the given analog pin is usable - if not - delete this task
-  if(!adcAttachPin(ANALOG_INPUT_PIN)){
-    Serial.printf("TaskAnalogRead cannot work because the given pin %d cannot be used for ADC - the task will delete itself.\n", ANALOG_INPUT_PIN);
-    analog_read_task_handle = NULL; // Prevent calling vTaskDelete on non-existing task
-    vTaskDelete(NULL); // Delete this task
-  }
+// void drawFontFaceDemo() {
+//   // Font Demo1
+//   // create more fonts at http://oleddisplay.squix.ch/
+//   display.setTextAlignment(TEXT_ALIGN_LEFT);
+//   display.setFont(ArialMT_Plain_10);
+//   display.drawString(0, 0, "Hello world");
+//   display.setFont(ArialMT_Plain_16);
+//   display.drawString(0, 10, "Hello world");
+//   display.setFont(ArialMT_Plain_24);
+//   display.drawString(0, 26, "Hello world");
+// }
 
-  for (;;){
-    // read the input on analog pin:
-    int sensorValue = analogRead(ANALOG_INPUT_PIN);
-    // print out the value you read:
-    Serial.println(sensorValue);
-    delay(100); // 100ms delay
+void drawFontFaceDemo() {
+  // Font Demo1
+  // create more fonts at http://oleddisplay.squix.ch/
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.setFont(ArialMT_Plain_24);
+  display.drawString(0, 20, "ON ");
+  delay(300);
+  display.drawString(0, 20, "OFF");
+  delay(300);
+  display.drawString(0, 20, "ON ");
+  delay(300);
+  display.drawString(0, 20, "OFF");
+  delay(300);
+
+  display.setTextAlignment(TEXT_ALIGN_RIGHT);
+  display.setFont(ArialMT_Plain_24);
+  display.drawString(128, 20, "100%");
+  delay(300);
+  display.drawString(128, 20, "50%");
+  delay(300);
+  display.drawString(128, 20, "10%");
+  delay(300);
+  display.drawString(128, 20, "0%");
+  delay(300);
+
+}
+
+void drawTextFlowDemo() {
+  display.setFont(ArialMT_Plain_10);
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawStringMaxWidth(0, 0, 128,
+                             "Lorem ipsum\n dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore." );
+}
+
+void drawTextAlignmentDemo() {
+  // Text alignment demo
+  display.setFont(ArialMT_Plain_10);
+
+  // The coordinates define the left starting point of the text
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawString(0, 10, "Left aligned (0,10)");
+
+  // The coordinates define the center of the text
+  display.setTextAlignment(TEXT_ALIGN_CENTER);
+  display.drawString(64, 22, "Center aligned (64,22)");
+
+  // The coordinates define the right end of the text
+  display.setTextAlignment(TEXT_ALIGN_RIGHT);
+  display.drawString(128, 33, "Right aligned (128,33)");
+}
+
+void drawRectDemo() {
+  // Draw a pixel at given position
+  for (int i = 0; i < 10; i++) {
+    display.setPixel(i, i);
+    display.setPixel(10 - i, i);
+  }
+  display.drawRect(12, 12, 20, 20);
+
+  // Fill the rectangle
+  display.fillRect(14, 14, 17, 17);
+
+  // Draw a line horizontally
+  display.drawHorizontalLine(0, 40, 20);
+
+  // Draw a line horizontally
+  display.drawVerticalLine(40, 0, 20);
+}
+
+void drawCircleDemo() {
+  for (int i = 1; i < 8; i++) {
+    display.setColor(WHITE);
+    display.drawCircle(32, 32, i * 3);
+    if (i % 2 == 0) {
+      display.setColor(BLACK);
+    }
+    display.fillCircle(96, 32, 32 - i * 3);
   }
 }
 
+void drawProgressBarDemo() {
+  int progress = (counter / 5) % 100;
+  // draw the progress bar
+  display.drawProgressBar(0, 32, 120, 10, progress);
+
+  // draw the percentage as String
+  display.setTextAlignment(TEXT_ALIGN_CENTER);
+  display.drawString(64, 15, String(progress) + "%");
+}
+
+
+Demo demos[] = {drawFontFaceDemo, drawTextFlowDemo, drawTextAlignmentDemo, drawRectDemo, drawCircleDemo, drawProgressBarDemo};
+int demoLength = (sizeof(demos) / sizeof(Demo));
+long timeSinceLastModeSwitch = 0;
+
+void loop() {
+  // clear the display
+  display.clear();
+  // draw the current demo method
+  demos[demoMode]();
+
+  display.setFont(ArialMT_Plain_10);
+  display.setTextAlignment(TEXT_ALIGN_RIGHT);
+  display.drawString(128, 54, String(millis()));
+  // write the buffer to the display
+  display.display();
+
+  if (millis() - timeSinceLastModeSwitch > DEMO_DURATION) {
+    demoMode = (demoMode + 1)  % demoLength;
+    timeSinceLastModeSwitch = millis();
+  }
+  counter++;
+  delay(10);
+}
 
 #endif // CONTROLLER_HPP
