@@ -55,10 +55,10 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&myData, incomingData, sizeof(myData));
   // Serial.print("Data received: ");
   // Serial.println(len);
-  Serial.print("Value: ");
+  // Serial.print("Value: ");
   Serial.println(myData.value);
-  Serial.print(myData.value / 4095.0 * 100.0);
-  Serial.println(" %");
+  // Serial.print(myData.value / 4095.0 * 100.0);
+  // Serial.println(" %");
 }
 
 #endif // RECEIVER_HPP
