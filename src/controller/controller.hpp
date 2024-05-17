@@ -41,6 +41,8 @@ enum State {
 // PROTOTYPES
 //-----------------------------------------------------------------------------
 
+uint16_t threshed(uint16_t analog, uint16_t threshMax, uint16_t threshMin);
+bool equal(float a, float b);
 void draw_main();
 void draw_edit_thresh();
 void state_main();
@@ -57,17 +59,12 @@ Bounce2::Button button1 = Bounce2::Button();
 Bounce2::Button button2 = Bounce2::Button();
 Bounce2::Button button3 = Bounce2::Button();
 
-long timeSince = 0;
 bool en = true;
 float factor = 0.0; // 0.0 - 1.0
-uint16_t analogInput = 4095; // 0-ANALOG_MAX
+uint16_t analogInput = 0; // 0-ANALOG_MAX
 uint16_t analogThreshMax = ANALOG_MAX;
 uint16_t analogThreshMin = 0;
 State state = MAIN;
-
-#define MAX_SCREEN 2
-
-int screen = 0;
 
 //-----------------------------------------------------------------------------
 // SETUP
