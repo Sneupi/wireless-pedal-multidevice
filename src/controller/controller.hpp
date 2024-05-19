@@ -2,6 +2,8 @@
 #define CONTROLLER_HPP
 
 //TODO: make as RTOS
+//FIXME: remove testing code
+//FIXME: make functions generic (indirectly access global variables)
 
 //-----------------------------------------------------------------------------
 // INCLUDES
@@ -180,7 +182,7 @@ void draw_main() {
 
   // draw progress bar
   uint8_t percent = (uint8_t)((threshed(analogInput, analogThreshMax, analogThreshMin) * factor / (float)ANALOG_MAX) * 100.0);
-  display.drawProgressBar(0, 40, 120, 10, percent);
+  display.drawProgressBar(0, 40, 120, 10, (en) ? percent : 0);
 
   display.display();
 }
