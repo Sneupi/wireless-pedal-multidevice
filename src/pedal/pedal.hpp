@@ -58,7 +58,7 @@ void setup() {
   esp_now_register_send_cb(OnDataSent);
   
   // Register peer
-  memcpy(peerInfo.peer_addr, RECEIVER_MAC, 6);
+  memcpy(peerInfo.peer_addr, CONTROLLER_MAC, 6);
   peerInfo.channel = 0;  
   peerInfo.encrypt = false;
   
@@ -83,7 +83,7 @@ void loop() {
   myData.value = analogRead(ANALOG_PIN);
   
   // Send message via ESP-NOW
-  esp_err_t result = esp_now_send(RECEIVER_MAC, (uint8_t *) &myData, sizeof(myData));
+  esp_err_t result = esp_now_send(CONTROLLER_MAC, (uint8_t *) &myData, sizeof(myData));
    
   if (result == ESP_OK) {
     Serial.println("Sending confirmed");

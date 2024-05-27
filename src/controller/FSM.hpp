@@ -39,7 +39,7 @@ State state;
 void state_main() {
 
     // Check if updating control values
-    if (button1.pressed() || button2.pressed()) {
+    if (button1.pressed() || button2.pressed() || button3.pressed()) {
 
         // Take control mutex
         if (xSemaphoreTake(controlMutex, portMAX_DELAY) == pdTRUE) {
@@ -57,6 +57,13 @@ void state_main() {
                     Serial.println("factor <- " + String(factor));
                 #endif
             }
+            if (button3.pressed()) {
+                state = EDIT_THRESH;
+                en = false; // disable sending when editing thresholds (safety measure)
+                #ifdef DEBUG
+                    Serial.println("state <- EDIT_THRESH");
+                #endif
+            }
 
             // Release control mutex
             xSemaphoreGive(controlMutex);
@@ -69,13 +76,7 @@ void state_main() {
         }
     }
 
-    // Check if change GUI state
-    if (button3.pressed()) {
-        state = EDIT_THRESH;
-        #ifdef DEBUG
-            Serial.println("state <- EDIT_THRESH");
-        #endif
-    }
+    
 
 }
 

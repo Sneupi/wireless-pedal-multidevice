@@ -7,6 +7,7 @@
 
 #include <Arduino.h>
 #include "fsm.hpp"
+#include "wireless.hpp"
 
 //-----------------------------------------------------------------------------
 // GLOBALS
@@ -18,14 +19,14 @@ static int button_pins[] = {CTRL_BUTTON1, CTRL_BUTTON2, CTRL_BUTTON3};
 // FUNCTIONS
 //-----------------------------------------------------------------------------
 
-void TaskWireless(void *pvParameters) {
-  for (;;) {
-    xSemaphoreTake(controlMutex, portMAX_DELAY);
-    analogInput = analogRead(35); //FIXME: testing, remove
-    xSemaphoreGive(controlMutex);
-    delay(10); // allow other tasks to run
-  }
-}
+// void TaskWireless(void *pvParameters) {
+//   for (;;) {
+//     xSemaphoreTake(controlMutex, portMAX_DELAY);
+//     analogInput = analogRead(35); //FIXME: testing, remove
+//     xSemaphoreGive(controlMutex);
+//     delay(10); // allow other tasks to run
+//   }
+// }
 
 //-----------------------------------------------------------------------------
 // SETUP
@@ -52,16 +53,19 @@ void setup() {
     , 0                    // Run on core 0
     );
 
-  // Init Wireless task
-  xTaskCreatePinnedToCore(
-    TaskWireless           // The function containing the task
-    ,  "Wireless"          // A name just for humans
-    ,  2048                // The stack size
-    ,  NULL                // Pass reference to a variable describing the task number
-    ,  1                   // priority
-    ,  NULL                // Task handle is not used here - simply pass NULL
-    , 1                    // Run on core 1
-    );
+  // // Init Wireless task
+  // xTaskCreatePinnedToCore(
+  //   TaskWireless           // The function containing the task
+  //   ,  "Wireless"          // A name just for humans
+  //   ,  2048                // The stack size
+  //   ,  NULL                // Pass reference to a variable describing the task number
+  //   ,  1                   // priority
+  //   ,  NULL                // Task handle is not used here - simply pass NULL
+  //   , 1                    // Run on core 1
+  //   );
+
+  // Init Wireless
+  wireless_init();
 
     #ifdef DEBUG
         Serial.println("Setup complete");
